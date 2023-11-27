@@ -1,0 +1,8 @@
+pypiwin32
+pyuac
+requests
+PyQT5
+pythonping
+pyqtdarktheme
+pyinstaller
+BeautifulSoup4
