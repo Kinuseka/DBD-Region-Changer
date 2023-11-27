@@ -11,5 +11,5 @@ where pip
 pip install -r requirements.txt
 
 
-python -m PyInstaller --noconfirm --onefile --windowed --icon "./res/image2.ico" --uac-admin --add-data "./res;res/" --add-data "./res/image2.jpg;res/" --add-data "./res/image1.png;res/"  "./mainGUI.py" -n "DBDRegion.exe"
+python -m PyInstaller --noconfirm --onefile --windowed --icon "./res/image2.ico" --uac-admin --add-data "./res/*;res/" "./mainGUI.py" -n "DBDRegion.exe"
 pause
