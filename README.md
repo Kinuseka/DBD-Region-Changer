@@ -44,7 +44,7 @@ Since option 1 is very intrusive then option 2 is the only plausible solution:
 
 **Q: How does the program operate?**
 
-**A: The game uses AWS Gamelift servers, the program modifies the dns of the hostname by forcing them to connect to a particular region**
+**A: The game uses AWS Gamelift servers, the program modifies the IP Address of the hostname by forcing them to connect to a particular region**
 
 **Q: How do I know this is safe?**
 
