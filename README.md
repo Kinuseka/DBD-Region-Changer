@@ -8,6 +8,10 @@ Simplifies server selection to connect to any Dead by daylight servers
 
 ![Image of the DBD region changer](./images/app_image.png)
 
+**Notice:**
+
+The game needs to be restarted everytime you switch a server
+
 ## Antivirus Mitigation
 Some antivirus has advanced security measure to defend against malicious modification on important files. The hosts file is located on `C:\Windows\System32\drivers\etc\hosts` which is a protected directory and so therefore is protected.
 
