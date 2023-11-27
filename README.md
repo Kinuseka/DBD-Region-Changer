@@ -8,6 +8,10 @@ Simplifies server selection to connect to any Dead by daylight servers
 
 ![Image of the DBD region changer](./images/app_image.png)
 
+**Notice:**
+
+The game needs to be restarted everytime you switch a server
+
 ## Antivirus Mitigation
 Some antivirus has advanced security measure to defend against malicious modification on important files. The hosts file is located on `C:\Windows\System32\drivers\etc\hosts` which is a protected directory and so therefore is protected.
 
@@ -46,6 +50,6 @@ Since option 1 is very intrusive then option 2 is the only plausible solution:
 
 **A: It's understandable to approach the program with caution, especially considering the level of permissions it requires. The source code is open-source, and you are free to inspect it for any potential security concerns.**
 
-**For transparency all ENDPOINTS it communicates on the internet are stored on the `constants.py`. Feel free to modify it to your liking if you uncomfortable with the current setting** 
+**For transparency all ENDPOINTS it communicates on the internet are stored on the `constants.py`. Feel free to modify it to your liking if you are uncomfortable with the current setting** 
 
 **The binaries provided are uploaded without any modifications and are presented as they exist in the repository. Users have the freedom to either build their own binary application or execute it as a Python script.**
