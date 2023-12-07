@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup, ResultSet, Tag, NavigableString
 from typing import Union, Iterable, Callable, List
 from pythonping import ping
+import concurrent.futures
 import constants as cnts
 import requests
 import socket
@@ -152,8 +153,16 @@ class GameliftList:
         return server_data
 
 def pinger(IP):
-    response = ping(IP, timeout=2, count=1)
+    if not IP:
+        return False
+    response = ping(IP, count=10)
     return response
+
+def handle_ping(IPs):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(pinger, IP) for IP in IPs]
+    return [f.result() for f in futures]
+
 def dns_over_https(hostname):
     dns = cnts.DNS[0] #cloudflare
     json = {"name": hostname, "type": "A", "ct": "application/dns-json"}

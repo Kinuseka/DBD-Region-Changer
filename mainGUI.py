@@ -11,7 +11,7 @@ import threading
 from typing import Iterable
 import sys, os
 import time
-from controller import GameliftList, HostHub, pinger, dns_over_https
+from controller import GameliftList, HostHub, pinger, dns_over_https, handle_ping
 from version_handler import __version__
 import webbrowser
 
@@ -97,6 +97,7 @@ class GUI(QWidget):
         if not self.gamelift.load():
             self._call_error_window(title='No Internet', message="Cannot load server lists, please ensure a stable connection to proceed!")
             self.close()
+            raise ValueError("Cannot proceed, due to gamelift unsuccessful load")
         datas = self.gamelift.sort_data()
         for data in datas:
             self.sendComboBox.addItem(f"{data['server_pretty']} ({data['server_name']})")
@@ -153,22 +154,29 @@ class GUI(QWidget):
 
     def _get_ping_block(self, datas):
         result = []
+        IPs = []
         for data in datas:
+            try:
+                resp = dns_over_https(data['server_endpoint'])
+                Resolved_IP = resp['Answer'][0]['data']
+                IPs.append(Resolved_IP)
+            except Exception as e:
+                print(f"Detected error during ping of : {data['server_name']}", e)
+                IPs.append(False)
+        ping_responses = handle_ping(IPs)
+        for (ping_data, data) in zip(ping_responses, datas):
             template_result = {
                 "server_name": None,
                 "ping": None,
                 "loss": None
             }
-            try:
-                IP = dns_over_https(data['server_endpoint'])
-                Resolved_IP = IP['Answer'][0]['data']
-                ping_data = pinger(Resolved_IP)
+            if ping_data:
                 template_result['server_name'] = data['server_name']
                 template_result['ping'] = ping_data.rtt_avg_ms
-                template_result["loss"] = ping_data.packet_loss
+                template_result["loss"] = round(ping_data.packet_loss, 2)
                 result.append(template_result)
-            except Exception as e:
-                print(f"Detected error during ping of : {data['server_name']}", e)
+            else:
+                print(f"Detected error during ping of : {data['server_name']}")
                 template_result['server_name'] = data['server_name']
                 template_result['ping'] = -1
                 template_result["loss"] = 1
