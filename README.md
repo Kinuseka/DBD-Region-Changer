@@ -44,7 +44,7 @@ Since option 1 is very intrusive then option 2 is the only plausible solution:
 
 **Q: How does the program operate?**
 
-**A: There is a well known method in the community to switch regional servers on Dead by daylight, this program automates this process, reducing the technicalities and hassle**
+**A: The game uses AWS Gamelift servers, the program modifies the IP Address of the hostname by forcing them to connect to a particular region**
 
 **Q: How do I know this is safe?**
 
