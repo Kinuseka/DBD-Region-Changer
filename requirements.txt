@@ -2,6 +2,7 @@ pypiwin32
 pyuac
 requests
 PyQT5
+PyQt5-sip
 pythonping
 pyqtdarktheme
 pyinstaller
