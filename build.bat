@@ -1,15 +1,9 @@
 @echo off
+python -m venv .venv
 
-if not exist ".venv" (
-    echo .venv directory not found, creating a new virtual environment.
-    python -m venv .venv
-) else (
-    echo .venv directory found, using the existing virtual environment.
-)
-call .venv\Scripts\activate.bat
+call .venv\Scripts\activate
 where pip
+
 pip install -r requirements.txt
-
-
-python -m PyInstaller --noconfirm --onefile --windowed --icon "./res/image2.ico" --uac-admin --add-data "./res/*;res/" "./mainGUI.py" -n "DBDRegion.exe"
+python -m PyInstaller --noconfirm --onefile --windowed --icon "./res/image2.ico" --uac-admin --add-data "./res/*;res/" "./mainGUI.py" -n "DBDRegion.exe" --version-file "./res/version_file.txt"
 pause
