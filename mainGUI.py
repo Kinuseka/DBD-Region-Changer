@@ -411,7 +411,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyleSheet('QMainWindow')
     qdarktheme.setup_theme(
-        theme="auto",
+        theme="dark",
         custom_colors={
             "[dark]": {
                 "primary": "#D0BCFF"
