@@ -508,7 +508,8 @@ if __name__ == "__main__":
     elif sys.stdout:
         log.add(sys.stdout, colorize=True, format="[<blue>{name}</blue>][{level}]<green>{time}</green> <level>{message}</level>")
         log.add(open(os.path.join(TEMP_DIR.name, LOG_FILENAME), 'w'), colorize=False, format="[<blue>{name}</blue>][{level}]<green>{time}</green> <level>{message}</level>")
-    
+    else:
+        log.add(open(os.path.join(TEMP_DIR.name, LOG_FILENAME), 'w'), colorize=False, format="[<blue>{name}</blue>][{level}]<green>{time}</green> <level>{message}</level>")
     log.info('Logger ready')
     def resource_path(relative_path):
         """ Get absolute path to resource, works for dev and for PyInstaller """
