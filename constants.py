@@ -5,6 +5,10 @@ DNS = [
     {
         "name": "cloudflare",
         "url": "https://cloudflare-dns.com/dns-query"
+    },
+    {
+        "name": "quad9",
+        "url": "https://dns.quad9.net/dns-query"
     }
 ]
 GITHUB_ENDPOINT = "https://github.com/Kinuseka/DBD-Region-Changer"
