@@ -1,11 +1,64 @@
+import pip_system_certs.wrapt_requests
 from bs4 import BeautifulSoup, ResultSet, Tag, NavigableString
 from typing import Union, Iterable, Callable, List
+from functools import lru_cache, wraps
+from time import monotonic_ns
+from frozendict import frozendict
 from pythonping import ping
+from loguru import logger
 import concurrent.futures
 import constants as cnts
 import requests
 import socket
 import io
+#Bind to logger
+log = logger.bind(name="DBDRegion-Debug")
+
+def freezeargs(func):
+    wraps(func)
+    def wrapped(*args, **kwargs):
+        args = (frozendict(arg) if isinstance(arg, dict) else arg for arg in args)
+        kwargs = {k: frozendict(v) if isinstance(v, dict) else v for k, v in kwargs.items()}
+        return func(*args, **kwargs)
+    return wrapped
+
+#From gist: https://gist.github.com/Morreski/c1d08a3afa4040815eafd3891e16b945
+def cached(
+    _func=None, *, seconds: int = 600, maxsize: int = 128, typed: bool = False
+):
+    """An implementation of lru_cache that memoizes a response as long as it is code 200
+
+    Parameters:
+    seconds (int): Timeout in seconds to clear the WHOLE cache, default = 10 minutes
+    maxsize (int): Maximum Size of the Cache
+    typed (bool): Same value of different type will be a different entry
+
+    """
+
+    def wrapper_cache(f):
+        f = lru_cache(maxsize=maxsize, typed=typed)(f)
+        f.delta = seconds * 10 ** 9
+        f.expiration = monotonic_ns() + f.delta
+        @freezeargs
+        @wraps(f)
+        def wrapped_f(*args, **kwargs):
+            resp = f(*args, **kwargs)
+            if monotonic_ns() >= f.expiration:
+                f.cache_clear()
+                f.expiration = monotonic_ns() + f.delta
+            if resp.status_code != 200:
+                f.cache_clear()
+                f.expiration = 0
+            return resp
+        wrapped_f.cache_info = f.cache_info
+        wrapped_f.cache_clear = f.cache_clear
+        return wrapped_f
+
+    # To allow decorator to be used without arguments
+    if _func is None:
+        return wrapper_cache
+    else:
+        return wrapper_cache(_func)
 
 class HostHub:
     def __init__(self) -> None:
@@ -77,12 +130,13 @@ class GameliftList:
             res = requests.get(self.endpoint)
             self.soup = BeautifulSoup(res.content, "html.parser")
         except requests.exceptions.RequestException as e:
-            print(e)
+            log.exception('An error has occured while loading gamelift')
             self.results = BeautifulSoup("<html></html><>", "html.parser")
             return False
         table = self.soup.find('div', {'class': 'table-contents'})
         self.results: ResultSet[Union[Tag, NavigableString]] = table.find_all('tr')
         return True
+
     def sort_data(self):
         indexed_data = []
         for result in self.results:
@@ -101,7 +155,7 @@ class GameliftList:
 
     def get_ip(self, data):
         server = data["server_endpoint"]
-        return socket.gethostbyname(server)
+        return dns_over_https(server)
     
     def get_host(self, ip):
         name, alias, addr = socket.gethostbyaddr(ip)
@@ -158,19 +212,46 @@ def pinger(IP):
     response = ping(IP, count=10)
     return response
 
+def create_thread_pools(datas, func):
+    try:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(func, data) for data in datas]
+    except RuntimeError:
+        return []
+    return futures
+
 def handle_ping(IPs):
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(pinger, IP) for IP in IPs]
-    return [f.result() for f in futures]
+    futures = create_thread_pools(IPs, pinger)
+    results = []
+    for num, f in enumerate(futures):
+        try:
+            results.append(f.result())
+        except Exception as e:
+            log.exception(f'Issue occured while pinging IP: {IPs[num]}')
+            results.append(False)
+    return results
 
-def dns_over_https(hostname):
-    dns = cnts.DNS[0] #cloudflare
-    json = {"name": hostname, "type": "A", "ct": "application/dns-json"}
-    headers = {"accept": "application/dns-json"}
-    response = requests.get(dns['url'], headers=headers, params=json, timeout=10)
-    response.raise_for_status()
-    return response.json()
+@cached(seconds=600)
+def request_cached(*args, **kwargs):
+    log.debug(f"Requesting at {args}")
+    resp = requests.get(*args, **kwargs)
+    log.debug(f"We requested at {args} and responded: {resp}")
+    return resp
 
+def dns_over_https(hostname, ip_only=True):
+    for dns in cnts.DNS:
+        json = {"name": hostname, "type": "A", "ct": "application/dns-json"}
+        headers = {"accept": "application/dns-json"}
+        try:
+            response = request_cached(dns['url'], headers=headers, params=json, timeout=3)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            log.exception(f"Failed to resolve dns with: {dns['name']}")
+        data = response.json()
+        if ip_only:
+            return data['Answer'][0]['data']
+        return data
+    return None
 
 import pyuac
 if __name__ == "__main__":
