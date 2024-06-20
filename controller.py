@@ -126,7 +126,7 @@ class GameliftList:
     def load(self):
         "Loads the data, required to call this method first"
         try:
-            user_agent = FakeUserAgent().firefox
+            user_agent = FakeUserAgent().random
             log.debug(f'Using user agent: {user_agent}')
             res = requests.get(self.endpoint,
                                headers={
@@ -139,6 +139,7 @@ class GameliftList:
             return False
         except FakeUserAgentError as e:
             log.error(f'Failed to generate user-agent due to: {e}')
+            raise e
         table = self.soup.find('div', {'class': 'table-contents'})
         self.results: ResultSet[Union[Tag, NavigableString]] = table.find_all('tr')
         return True
