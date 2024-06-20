@@ -1,6 +1,7 @@
 import pip_system_certs.wrapt_requests
 from bs4 import BeautifulSoup, ResultSet, Tag, NavigableString
 from typing import Union, Iterable, Callable, List
+from fake_useragent import FakeUserAgent, FakeUserAgentError
 from functools import lru_cache, wraps
 from time import monotonic_ns
 from frozendict import frozendict
@@ -11,6 +12,7 @@ import constants as cnts
 import requests
 import socket
 import io
+
 #Bind to logger
 log = logger.bind(name="DBDRegion-Debug")
 
@@ -120,19 +122,23 @@ class HostHub:
 class GameliftList:
     def __init__(self, endpoint = cnts.GAME_LIFT_ENDPOINT) -> None:
         self.endpoint = endpoint
-        
-    def _get_server_endpoints(self, result: ResultSet):
-        result
 
     def load(self):
         "Loads the data, required to call this method first"
         try:
-            res = requests.get(self.endpoint)
+            user_agent = FakeUserAgent().firefox
+            log.debug(f'Using user agent: {user_agent}')
+            res = requests.get(self.endpoint,
+                               headers={
+                                   'User-Agent': user_agent
+                               })
             self.soup = BeautifulSoup(res.content, "html.parser")
         except requests.exceptions.RequestException as e:
             log.exception('An error has occured while loading gamelift')
             self.results = BeautifulSoup("<html></html><>", "html.parser")
             return False
+        except FakeUserAgentError as e:
+            log.error(f'Failed to generate user-agent due to: {e}')
         table = self.soup.find('div', {'class': 'table-contents'})
         self.results: ResultSet[Union[Tag, NavigableString]] = table.find_all('tr')
         return True
