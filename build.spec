@@ -3,7 +3,11 @@ block_cipher = None
 from PyInstaller.utils.hooks import collect_data_files
 
 fua_data = collect_data_files('fake_useragent', include_py_files=True)
-datas = [('./res/*', 'res/')]
+datas = [
+            ('./res/github-mark.png', 'res/'),
+            ('./res/github-mark-white.png', 'res/'),
+            ('./res/image2.jpg', 'res/')
+        ]
 datas.extend(fua_data)
 
 a = Analysis(
