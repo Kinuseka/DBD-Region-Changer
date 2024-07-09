@@ -1,6 +1,8 @@
 # DBD-Region-Changer
 Simplifies server selection to connect to any Dead by daylight servers
 
+<a href="https://www.buymeacoffee.com/kinuseka" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="20" width="100"></a>
+
 ## How to Use
 1. [Download the program](https://github.com/Kinuseka/DBD-Region-Changer/releases/latest)
 2. Open the app and allow UAC popup [why?](#questions)
