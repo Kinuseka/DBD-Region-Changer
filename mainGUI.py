@@ -26,6 +26,7 @@ import webbrowser
 import tempfile
 import datetime
 import argparse
+IS_DEBUG = False
 class GUI(QWidget):
     def __init__(self, parent) -> None:
         super().__init__(parent)
@@ -58,6 +59,7 @@ class GUI(QWidget):
         self.layout.addLayout(layout)
         self.setLayout(self.layout)
         log.info('GUI Initialized')
+        self.DEBUG_MODE = IS_DEBUG
     
     def __threaded_option(self,func: object = None,args: Iterable = ()):
         thread = threading.Thread(target=func,args=args)
@@ -67,15 +69,28 @@ class GUI(QWidget):
     def _set_icon(self, object, path):
         object.setIcon(QIcon(path))
     
-    def _check_updates(self):
-        webbrowser.open(cnts.UPDATE_ENDPOINT, new=2)
+    def _open_browser(self, url):
+        opened = webbrowser.open(url=url, new=2)
+        if opened:
+            log.info(f'Opened url: {url}')
+        else:
+            log.info(f'Failed to open url: {url}')
     
     def _dump_logs(self):
-        dest_dir = str(QFileDialog.getExistingDirectory(self, "Select directory to dump logs to"))
+        dest_dir = QFileDialog.getExistingDirectory(self, "Select directory to dump logs to")
+        if not dest_dir: 
+            log.info('Cancelled log dump')
+            return
         log.info(f'Logs dumped to: {dest_dir}') #Put this first so this log info will be logged upon dump
         src_dir = os.path.join(TEMP_DIR.name, LOG_FILENAME)
-        shutil.copy(src_dir, dest_dir)
-
+        try:
+            shutil.copy(src_dir, dest_dir)
+        except shutil.SameFileError:
+            log.warning('Attemping to dump logs on the same directory as the source, aborting task')
+            warn = QMessageBox.warning(self,
+                    'Warning',
+                    'You cannot use the same directory as the source, task aborted')
+    
     def load_title(self):
         group = QWidget()
         layout = QHBoxLayout()
@@ -86,7 +101,7 @@ class GUI(QWidget):
         #
         menu = QMenu(self)
         action_update = QAction("Check for updates",self)
-        action_update.triggered.connect(lambda: self.__threaded_option(func=self._check_updates))
+        action_update.triggered.connect(lambda: self.__threaded_option(func=self._open_browser, args=(cnts.UPDATE_ENDPOINT,)))
         action_logs_dump = QAction("Dump logs",self)
         action_logs_dump.triggered.connect(self._dump_logs)
         menu.addAction(action_update)
@@ -103,7 +118,7 @@ class GUI(QWidget):
         github_button.leaveEvent = (lambda event: self._set_icon(github_button,resource_path(os.path.join('res','github-mark-white.png'))))
         github_button.setToolTip('GitHub')
         github_button.setFlat(True)
-        github_button.clicked.connect(lambda: webbrowser.open(cnts.GITHUB_ENDPOINT, new=2))
+        github_button.clicked.connect(lambda: self.__threaded_option(func=self._open_browser, args=(cnts.GITHUB_ENDPOINT,)))
         #
         label = QLabel()
         label.setText(f'<font size="7"><b>DBD Region Changer</b></font> &nbsp;&nbsp;<font size="6" color="#2E313F">V{__version__}</font>')
@@ -501,6 +516,7 @@ if __name__ == "__main__":
     logger.remove()
     log = logger.bind(name="DBDRegion-Debug")
     if cli_args.debug:
+        IS_DEBUG = True
         _console = create_console()
         _console.write('Debug console opened\n')
         log.add(_console, colorize=True, format="[<blue>{name}</blue>][{level}]<green>{time}</green> <level>{message}</level>")
