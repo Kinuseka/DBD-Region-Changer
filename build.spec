@@ -2,7 +2,7 @@
 block_cipher = None
 from PyInstaller.utils.hooks import collect_data_files
 
-fua_data = collect_data_files('fake_useragent', include_py_files=True)
+fua_data = collect_data_files('fake_useragent', include_py_files=False)
 datas = [
             ('./res/github-mark.png', 'res/'),
             ('./res/github-mark-white.png', 'res/'),
@@ -21,7 +21,7 @@ a = Analysis(
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
-    optimize=0,
+    optimize=2,
 )
 pyz = PYZ(a.pure)
 
