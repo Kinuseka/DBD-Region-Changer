@@ -1,5 +1,6 @@
 from models.window import ErrorBox
 from tools.processes import InstanceLimiter, create_console, ConsoleFile, SplitIO
+from tools.essentials import wait_awaitable
 from version_handler import __version__
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton
 from PyQt5.QtWidgets import QComboBox, QGroupBox, QMenu, QGraphicsDropShadowEffect
@@ -87,9 +88,9 @@ class GUI(QWidget):
             shutil.copy(src_dir, dest_dir)
         except shutil.SameFileError:
             log.warning('Attemping to dump logs on the same directory as the source, aborting task')
-            warn = QMessageBox.warning(self,
-                    'Warning',
-                    'You cannot use the same directory as the source, task aborted')
+            QMessageBox.warning(self,
+                'Warning',
+                'You cannot use the same directory as the source, task aborted')
     
     def load_title(self):
         group = QWidget()
@@ -339,7 +340,7 @@ class GUI(QWidget):
         self.clearButton.setEnabled(enabled)
     
     def _call_error_window(self, title, message):
-        box = ErrorBox(title, message)
+        box = ErrorBox(title, message, parent=self, ontop=False)
         box.exec_()
 
     def set_server(self):
@@ -553,15 +554,16 @@ if __name__ == "__main__":
     log.info(f'Resource path is at: {resource_path("")}')
     log.info(f'Temp path is at: {TEMP_DIR.name}')
     instance_app = InstanceLimiter()
-    if instance_app.is_running():
-        log.info('Duplicate process detected')
-        ErrorBox('Duplicate processes', 'Another process is running').exec_()
-        sys.exit(1)
     try:
+        if instance_app.is_running():
+            log.info('Duplicate process detected')
+            ErrorBox('Duplicate processes', 'Another process is running').exec_()
+            sys.exit(1)
         MainWindow = Window()
         sys.exit(app.exec_())
     finally:
         log.info('Reached end of process, closing handle')
+        wait_awaitable(log.complete())
         log.remove()
         # out_log.close()
         TEMP_DIR.cleanup()
