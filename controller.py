@@ -68,7 +68,7 @@ class HostHub:
 
     def _content_host(self):
         contents = []
-        with open(self.location, "r") as file:
+        with open(self.location, "r", encoding='utf-8') as file:
             for line in file.readlines():
                 chose = line.strip().split()
                 if chose and not line.startswith('#'):
@@ -96,16 +96,16 @@ class HostHub:
     
     def save(self, ip, hostname):
         entry = f"{ip} {hostname}"
-        with open(self.location, 'r') as f:
+        with open(self.location, 'r', encoding='utf-8') as f:
             lines = f.readlines()
             if lines and lines[-1].strip():
                 # Last line is not empty, add a newline before appending the entry
                 entry = "\n" + entry
-        with open(self.location, 'a') as f:
+        with open(self.location, 'a', encoding='utf-8') as f:
             f.write(entry)
         
     def remove(self, hostname):
-        with open(self.location, "r+") as f:
+        with open(self.location, "r+", encoding='utf-8') as f:
             d = f.readlines()
             f.seek(0)
             for i in d:
@@ -117,7 +117,7 @@ class HostHub:
             f.truncate()
 
     def open_host(self):
-        self.filehost = open(self.location)
+        self.filehost = open(self.location, encoding='utf-8')
 
 class GameliftList:
     def __init__(self, endpoint = cnts.GAME_LIFT_ENDPOINT) -> None:
