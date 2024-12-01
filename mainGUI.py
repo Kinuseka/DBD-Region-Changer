@@ -1,6 +1,4 @@
 from models.window import ErrorBox
-from tools.processes import InstanceLimiter, create_console, ConsoleFile, SplitIO
-from tools.essentials import wait_awaitable, check_version
 from version_handler import __version__
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton
 from PyQt5.QtWidgets import QComboBox, QGroupBox, QMenu
@@ -23,6 +21,8 @@ from controller import (
     handle_ping, 
     create_thread_pools
 )
+from tools.processes import InstanceLimiter, create_console, ConsoleFile, SplitIO
+from tools.essentials import wait_awaitable, check_version
 import webbrowser
 import tempfile
 import datetime
