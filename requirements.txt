@@ -11,3 +11,4 @@ frozendict==2.4.4
 loguru==0.7.2
 pip-system-certs==4.0
 fake-useragent==1.5.1
+semver>=3.0.2

@@ -1,9 +1,9 @@
 from models.window import ErrorBox
 from tools.processes import InstanceLimiter, create_console, ConsoleFile, SplitIO
-from tools.essentials import wait_awaitable
+from tools.essentials import wait_awaitable, check_version
 from version_handler import __version__
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton
-from PyQt5.QtWidgets import QComboBox, QGroupBox, QMenu, QGraphicsDropShadowEffect
+from PyQt5.QtWidgets import QComboBox, QGroupBox, QMenu
 from PyQt5.QtWidgets import QGridLayout, QScrollArea, QLabel, QToolButton, QFileDialog
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QMessageBox, QStyle, QAction
 from PyQt5 import QtCore
@@ -91,6 +91,44 @@ class GUI(QWidget):
             QMessageBox.warning(self,
                 'Warning',
                 'You cannot use the same directory as the source, task aborted')
+    def _check_for_updates(self):
+        from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QDialogButtonBox, QPushButton
+        def run_dialogue(header, message, update_available=True):
+            dialog = QDialog(self)
+            dialog.setWindowTitle(header)
+            dialog.setWindowFlags(dialog.windowFlags() & ~Qt.WindowContextHelpButtonHint | Qt.MSWindowsFixedSizeDialogHint)
+            layout = QVBoxLayout(dialog)
+            info_label = QLabel(f"{message}\n\nCurrent: {local_version}\nLatest: {remote_version}")
+            layout.addWidget(info_label)
+            button_box = QDialogButtonBox(dialog)
+            if update_available:
+                check_github_button = QPushButton("Check Github")
+                cancel_button = QPushButton("Cancel")
+                button_box.addButton(check_github_button, QDialogButtonBox.AcceptRole)
+                button_box.addButton(cancel_button, QDialogButtonBox.RejectRole)
+                button_box.setCenterButtons(True)
+                check_github_button.clicked.connect(lambda: (self._open_browser(cnts.UPDATE_ENDPOINT), dialog.accept()))
+                cancel_button.clicked.connect(dialog.reject)
+            else:
+                ok_button = QPushButton("OK")
+                button_box.addButton(ok_button, QDialogButtonBox.AcceptRole)
+                ok_button.clicked.connect(dialog.accept)
+            layout.addWidget(button_box)
+            dialog.exec()
+        local_version, remote_version, status = check_version()
+        if status == 1:
+            log.debug(f"Version checker found a latest version: {local_version} | {remote_version}")
+            run_dialogue("Update Available", "A New Version is Available")
+        elif status == 2:
+            log.debug(f"Version checker determines the app is a future version: {local_version} | {remote_version}")
+            run_dialogue("Future Version", "You are using an Unreleased Version")
+        elif status == -1:
+            log.error(f"Error when checking update: {local_version} | {remote_version}")
+            run_dialogue("Cannot check for updates", "An error occured while checking for updates", False)
+        else:
+            log.debug(f"Version checker determines the app is currently up-to-date: {local_version} | {remote_version}")
+            run_dialogue("No Update Found", "This is the latest version.", False)
+
     
     def load_title(self):
         group = QWidget()
@@ -102,7 +140,7 @@ class GUI(QWidget):
         #
         menu = QMenu(self)
         action_update = QAction("Check for updates",self)
-        action_update.triggered.connect(lambda: self.__threaded_option(func=self._open_browser, args=(cnts.UPDATE_ENDPOINT,)))
+        action_update.triggered.connect(self._check_for_updates)
         action_logs_dump = QAction("Dump logs",self)
         action_logs_dump.triggered.connect(self._dump_logs)
         menu.addAction(action_update)

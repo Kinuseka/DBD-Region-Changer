@@ -15,4 +15,4 @@ DNS = [
 ]
 GITHUB_ENDPOINT = "https://github.com/Kinuseka/DBD-Region-Changer"
 UPDATE_ENDPOINT = "https://github.com/Kinuseka/DBD-Region-Changer/releases/latest"
-API_GITHUB_ENDPOINT = ""
+API_GITHUB_ENDPOINT = "https://api.github.com/repos/Kinuseka/DBD-Region-Changer/releases/latest"
