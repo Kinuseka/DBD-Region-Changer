@@ -5,13 +5,12 @@ from fake_useragent import FakeUserAgent, FakeUserAgentError
 from functools import lru_cache, wraps
 from time import monotonic_ns
 from frozendict import frozendict
+from constants import GAMELIFT_DUALSTACK, GAMELIFT_HOSTNAME
 from pythonping import ping
 from loguru import logger
 import concurrent.futures
 import constants as cnts
 import requests
-import socket
-import io
 
 #Bind to logger
 log = logger.bind(name="DBDRegion-Debug")
@@ -144,31 +143,33 @@ class GameliftList:
         self.results: ResultSet[Union[Tag, NavigableString]] = table.find_all('tr')
         return True
 
-    def sort_data(self):
+    def get_gamelift_servers(self):
+        "Return server list"
         indexed_data = []
         for result in self.results:
             template_data = {
                 "server_name": None,
-                "server_endpoint": None
+                "server_endpoint": None,
+                "server_dualstack": None,
+                "server_pretty": None
             }
             tabindex = result.find_all("td")
             if not tabindex:
                 continue
+            region_code = tabindex[1].text.strip()
+            hostnames = build_gamelift_host(region=region_code)
             template_data["server_pretty"] = tabindex[0].text.strip()
-            template_data["server_name"] = tabindex[1].text.strip()
-            template_data["server_endpoint"] = tabindex[2].text.strip()
+            template_data["server_name"] = region_code
+            template_data["server_endpoint"] = hostnames[0]
+            template_data["server_dualstack"] = hostnames[1]
             indexed_data.append(template_data)
         return indexed_data
 
-    def get_ip(self, data):
-        server = data["server_endpoint"]
-        return dns_over_https(server)
-    
-    def get_host(self, ip):
-        name, alias, addr = socket.gethostbyaddr(ip)
+    def get_ip(self, hostname):
+        return dns_over_https(hostname)
     
     def is_aws_host(self, host: str):
-        data = self.sort_data()
+        data = self.get_gamelift_servers()
         for each in data:
             if host == each['server_endpoint']:
                 return True 
@@ -176,17 +177,18 @@ class GameliftList:
             return False
 
     def get_data_fromhost(self, hostname: str):
-        return [d for d in self.sort_data() if d.get("server_endpoint") == hostname][0]
+        return [d for d in self.get_gamelift_servers() if d.get("server_endpoint") == hostname][0]
 
     def get_data_fromservername(self, server_name: str):
-        return [d for d in self.sort_data() if d.get("server_name") == server_name][0]
+        return [d for d in self.get_gamelift_servers() if d.get("server_name") == server_name][0]
 
     def remove_server_bydata(self, server_data: dict):
-        return [d for d in self.sort_data() if not all(d.get(key) == value for key, value in server_data.items())]
+        return [d for d in self.get_gamelift_servers() if not all(d.get(key) == value for key, value in server_data.items())]
 
     def remove_old_host(self, host: HostHub):
-        for data in self.sort_data():
+        for data in self.get_gamelift_servers():
             host.remove(data['server_endpoint'])
+            host.remove(data['server_dualstack'])
     
     def modify_host(self, host: HostHub, server_name: str = None, server_host: str =None):
         self.remove_old_host(host)
@@ -195,10 +197,13 @@ class GameliftList:
         elif server_host:
             server_selected = self.get_data_fromhost(server_host)
         filtered_dicts = self.remove_server_bydata(server_selected)
-        server_selected_ip = self.get_ip(server_selected)
-        host.save(server_selected_ip, server_selected['server_endpoint'])
+        server_hostname_ip = self.get_ip(server_selected["server_endpoint"])
+        server_dualstack_ip = self.get_ip(server_selected["server_dualstack"])
+        host.save(server_hostname_ip, server_selected['server_endpoint'])
+        host.save(server_dualstack_ip, server_selected['server_dualstack'])
         for data in filtered_dicts:
-            host.save(server_selected_ip, data['server_endpoint'])
+            host.save(server_hostname_ip, data['server_endpoint'])
+            host.save(server_dualstack_ip, data['server_dualstack'])
 
     def current_host(self, host: HostHub):
         hosts = host.hosts(callback=self.is_aws_host)
@@ -226,6 +231,12 @@ def create_thread_pools(datas, func):
     except RuntimeError:
         return []
     return futures
+
+def build_gamelift_host(region):
+    return [
+        GAMELIFT_HOSTNAME.format(service_code="gamelift", region_code=region),
+        GAMELIFT_DUALSTACK.format(service_code="gamelift-ping", region_code=region)
+    ]
 
 def handle_ping(IPs):
     futures = create_thread_pools(IPs, pinger)
@@ -270,7 +281,7 @@ if __name__ == "__main__":
             gamelift = GameliftList()
             hub = HostHub()
             gamelift.load()
-            gameservers = gamelift.sort_data()
+            gameservers = gamelift.get_gamelift_servers()
             hosts = hub.hosts(callback=gamelift.is_aws_host)
             gamelift.modify_host("us-east-1", hub)
             gamelift.current_host(hub)
