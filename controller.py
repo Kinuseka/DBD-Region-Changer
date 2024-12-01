@@ -79,19 +79,19 @@ class HostHub:
     
     def hosts(self, callback: Callable=None) -> List[List]:
         """
-        callback: Passes a hostname and determine the outcome
+        callback: Adds the hostname to the list if condition is True. Callback will always default to True if not provided
         """
         if not callback:
             callback = lambda i: True
         hosts = self._content_host()
-        filtered = []
+        filtered_hosts = []
         for host in hosts:
             try:
                 if callback(host[1]):
-                    filtered.append(host)
+                    filtered_hosts.append(host)
             except IndexError:
                 pass
-        return filtered
+        return filtered_hosts
     
     def save(self, ip, hostname):
         entry = f"{ip} {hostname}"
@@ -105,14 +105,14 @@ class HostHub:
         
     def remove(self, hostname):
         with open(self.location, "r+", encoding='utf-8') as f:
-            d = f.readlines()
+            host_entries = f.readlines()
             f.seek(0)
-            for i in d:
+            for each in host_entries:
                 try:
-                    if i.strip().split()[1:][0] != hostname:
-                        f.write(i)
+                    if each.strip().split()[1:][0] != hostname:
+                        f.write(each)
                 except IndexError:
-                    f.write(i)
+                    f.write(each)
             f.truncate()
 
     def open_host(self):
@@ -261,7 +261,7 @@ def dns_over_https(hostname, ip_only=True):
         json = {"name": hostname, "type": "A", "ct": "application/dns-json"}
         headers = {"accept": "application/dns-json"}
         try:
-            response = request_cached(dns['url'], headers=headers, params=json, timeout=3)
+            response = request_cached(dns['url'], headers=headers, params=json, timeout=10)
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             log.exception(f"Failed to resolve dns with: {dns['name']}")
