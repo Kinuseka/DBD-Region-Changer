@@ -1,8 +1,8 @@
 HOST_DIR = "C:\Windows\System32\drivers\etc\hosts"
 GAME_LIFT_ENDPOINT = "https://docs.aws.amazon.com/general/latest/gr/gamelift.html"
 #https://docs.aws.amazon.com/general/latest/gr/rande.html#gamelift_region
-GAMELIFT_DUALSTACK = "{service-code}.{region-code}.api.aws"
-GAMELIFT_HOSTNAME = "{service-code}.{region-code}.amazonaws.com"
+GAMELIFT_DUALSTACK = "{service_code}.{region_code}.api.aws"
+GAMELIFT_HOSTNAME = "{service_code}.{region_code}.amazonaws.com"
 DNS = [
     {
         "name": "cloudflare",
