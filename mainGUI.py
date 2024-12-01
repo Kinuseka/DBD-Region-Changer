@@ -17,7 +17,7 @@ import sys, os, shutil
 import time
 from loguru import logger
 from controller import (
-    GameliftList, 
+    GameliftList,
     HostHub, 
     dns_over_https, 
     handle_ping, 
@@ -142,7 +142,7 @@ class GUI(QWidget):
             self._call_error_window(title='No Internet', message="Cannot load server lists, please ensure a stable connection to proceed!")
             self.close()
             sys.exit(1)
-        datas = self.gamelift.sort_data()
+        datas = self.gamelift.get_gamelift_servers() 
         for data in datas:
             self.sendComboBox.addItem(f"{data['server_pretty']} ({data['server_name']})")
             self.sendComboBox.setItemData(self.sendComboBox.count() - 1, data['server_endpoint'])
@@ -258,7 +258,7 @@ class GUI(QWidget):
 
     def ping_event_loop(self):
          # Grey is for error checking
-        datas = self.gamelift.sort_data()
+        datas = self.gamelift.get_gamelift_servers()
         while True:
             self._recent_ping = self._get_ping_block(datas)
             data_length = len(self._recent_ping)
@@ -505,6 +505,7 @@ if __name__ == "__main__":
     import qdarktheme
     parse_arguments = argparse.ArgumentParser(add_help=False, exit_on_error=False)
     parse_arguments.add_argument("-d", '--debug', action='store_true')
+    parse_arguments.add_argument("-f", action='store_true')
     try:
         cli_args, unknown = parse_arguments.parse_known_args()
     except (argparse.ArgumentError, SystemExit) as e:
@@ -557,8 +558,11 @@ if __name__ == "__main__":
     try:
         if instance_app.is_running():
             log.info('Duplicate process detected')
-            ErrorBox('Duplicate processes', 'Another process is running').exec_()
-            sys.exit(1)
+            if cli_args.f:
+                log.warning('Forced flag detected, keeping the app open. Might cause instability!')
+            else:
+                ErrorBox('Duplicate processes', 'Another process is running').exec_()
+                sys.exit(1)
         MainWindow = Window()
         sys.exit(app.exec_())
     finally:
