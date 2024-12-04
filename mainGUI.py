@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton
 from PyQt5.QtWidgets import QComboBox, QGroupBox, QMenu
 from PyQt5.QtWidgets import QGridLayout, QScrollArea, QLabel, QToolButton, QFileDialog
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QMessageBox, QStyle, QAction
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox
 from PyQt5 import QtCore
 from PyQt5.QtCore import QPoint, QSize
 from PyQt5.QtCore import Qt
@@ -92,7 +93,6 @@ class GUI(QWidget):
                 'Warning',
                 'You cannot use the same directory as the source, task aborted')
     def _check_for_updates(self):
-        from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QDialogButtonBox, QPushButton
         def run_dialogue(header, message, update_available=True):
             dialog = QDialog(self)
             dialog.setWindowTitle(header)
