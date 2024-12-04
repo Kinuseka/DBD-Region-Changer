@@ -33,14 +33,14 @@ StringFileInfo(
     [StringStruct(u'CompanyName', u'Kinuseka'),
     StringStruct(u'Publisher', u'Kinuseka'),
     StringStruct(u'FileDescription', u'DBD Region Changer'),
-    StringStruct(u'FileVersion', u'1.2.0-rc1'),
+    StringStruct(u'FileVersion', u'1.2.0'),
     StringStruct(u'InternalName', u'DBDRegion'),
     StringStruct(u'LegalCopyright', u''),
     StringStruct(u'OriginalFilename', u'DBDRegion.exe'),
     StringStruct(u'ProductName', u'DBDRegionChanger'),
     StringStruct(u'Author', u'Kinuseka'),
     StringStruct(u'Language', u'Language Neutral'),
-    StringStruct(u'ProductVersion', u'1.2.0-rc1')])
+    StringStruct(u'ProductVersion', u'1.2.0')])
   ]), 
 VarFileInfo([VarStruct(u'Translation', [0, 1200])])
   ]
