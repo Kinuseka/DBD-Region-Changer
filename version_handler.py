@@ -1,7 +1,7 @@
 """
-CFSession.__version__
+version_manager
 ~~~~~~~~~~~~~
-Version manager for CFSession
+Taken from version manager of CFSession
 """
 
 # Simply following the Python markdown's versioning format since it is good enough for me.
